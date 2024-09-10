@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using RazorPagesPizza.Models;
@@ -5,9 +6,12 @@ using RazorPagesPizza.Services;
 
 namespace RazorPagesPizza.Pages
 {
+    [Authorize]
     public class PizzaModel : PageModel
     {
         public List<Pizza> pizzas = new();
+
+        public bool IsAdmin => HttpContext.User.HasClaim("IsAdmin", bool.TrueString);
 
         [BindProperty]
         public Pizza NewPizza { get; set; } = new();
@@ -19,6 +23,11 @@ namespace RazorPagesPizza.Pages
 
         public IActionResult OnPost()
         {
+            if (!IsAdmin)
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
                 return Page();
@@ -29,6 +38,11 @@ namespace RazorPagesPizza.Pages
 
         public IActionResult OnPostDelete(int id)
         {
+            if (!IsAdmin)
+            {
+                return Forbid();
+            }
+
             PizzaService.Delete(id);
             return RedirectToAction("Get");
         }
